@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💰 Smart Expense Splitter</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 700px;
+      margin: 50px auto;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 30px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 20px;
+      font-size: 1.8rem;
+    }
+
+    .currency-select {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .currency-select select {
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    input {
+      padding: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.2s;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 5px #007bff33;
+    }
+
+    .person-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .person-input button {
+      background: #ff4b5c;
+      border: none;
+      color: white;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .person-input button:hover {
+      background: #e84150;
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 1rem;
+      color: white;
+      background: #007bff;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: scale(1.02);
+    }
+
+    .result {
+      margin-top: 20px;
+      background: #f9fafc;
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    #chartContainer {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .reset-btn {
+      background: #6c757d;
+      margin-top: 10px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💰 Smart Expense Splitter</h1>
+
+    <div class="currency-select">
+      <label for="currency">Currency:</label>&nbsp;
+      <select id="currency">
+        <option value="₹">₹ (INR)</option>
+        <option value="$">$ (USD)</option>
+        <option value="€">€ (EUR)</option>
+      </select>
+    </div>
+
+    <div id="peopleList"></div>
+
+    <button onclick="addPerson()">➕ Add Person</button>
+    <button onclick="calculate()">🧮 Calculate Split</button>
+    <button class="reset-btn" onclick="resetAll()">♻ Reset</button>
+
+    <div id="result" class="result"></div>
+    <div id="chartContainer">
+      <canvas id="expenseChart" width="400" height="200"></canvas>
+    </div>
+
+    <button onclick="downloadReport()">📄 Download Report</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let people = [];
+    let chart;
+
+    function addPerson(name = '', amount = '') {
+      const container = document.getElementById('peopleList');
+      const div = document.createElement('div');
+      div.classList.add('person-input');
+      div.innerHTML = `
+        <input type="text" placeholder="Name" class="name" value="${name}">
+        <input type="number" placeholder="Amount Paid" class="amount" min="0" value="${amount}">
+        <button onclick="removePerson(this)">✖</button>
+      `;
+      container.appendChild(div);
+
+      div.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', calculate);
+      });
+    }
+
+    function removePerson(btn) {
+      btn.parentElement.remove();
+      calculate();
+    }
+
+    function calculate() {
+      const names = document.querySelectorAll('.name');
+      const amounts = document.querySelectorAll('.amount');
+      const currency = document.getElementById('currency').value;
+      people = [];
+
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i].value.trim();
+        const amount = parseFloat(amounts[i].value) || 0;
+        if (name) {
+          people.push({ name, amount });
+        }
+      }
+
+      const resultDiv = document.getElementById('result');
+      if (people.length === 0) {
+        resultDiv.innerHTML = "<p>Please add at least one person!</p>";
+        return;
+      }
+
+      const total = people.reduce((sum, p) => sum + p.amount, 0);
+      const share = total / people.length;
+
+      let resultHTML = <p><b>Total Expense:</b> ${currency}${total.toFixed(2)}</p>;
+      resultHTML += <p><b>Each person should pay:</b> ${currency}${share.toFixed(2)}</p><hr>;
+
+      people.forEach(p => {
+        const diff = p.amount - share;
+        if (diff > 0) {
+          resultHTML += <p>✅ ${p.name} should receive <b>${currency}${diff.toFixed(2)}</b></p>;
+        } else if (diff < 0) {
+          resultHTML += <p>❌ ${p.name} should pay <b>${currency}${Math.abs(diff).toFixed(2)}</b></p>;
+        } else {
+          resultHTML += <p>👌 ${p.name} is settled up</p>;
+        }
+      });
+
+      resultDiv.innerHTML = resultHTML;
+      drawChart();
+    }
+
+    function drawChart() {
+      const ctx = document.getElementById('expenseChart');
+      const labels = people.map(p => p.name);
+      const data = people.map(p => p.amount);
+
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels,
+          datasets: [{
+            data,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function resetAll() {
+      document.getElementById('peopleList').innerHTML = '';
+      document.getElementById('result').innerHTML = '';
+      if (chart) chart.destroy();
+      people = [];
+    }
+
+    function downloadReport() {
+      if (people.length === 0) {
+        alert('No data to download!');
+        return;
+      }
+      const currency = document.getElementById('currency').value;
+      const total = people.reduce((sum, p) => sum + p.amount, 0);
+      const share = total / people.length;
+      let text = Expense Report\n\nTotal Expense: ${currency}${total.toFixed(2)}\nEach Person Should Pay: ${currency}${share.toFixed(2)}\n\nDetails:\n;
+      people.forEach(p => {
+        const diff = p.amount - share;
+        if (diff > 0) text += ${p.name} should receive ${currency}${diff.toFixed(2)}\n;
+        else if (diff < 0) text += ${p.name} should pay ${currency}${Math.abs(diff).toFixed(2)}\n;
+        else text += ${p.name} is settled up\n;
+      });
+      const blob = new Blob([text], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Expense_Report.txt';
+      a.click();
+    }
+
+    // Add one default person on load
+    window.onload = () => addPerson();
+  </script>
+</body>
+</html>
