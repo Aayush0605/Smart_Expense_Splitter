@@ -2,273 +2,263 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>💰 Smart Expense Splitter</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --bg: #f2f4f7;
+      --card: #ffffff;
+      --muted: #6c757d;
+      --danger: #ff4b5c;
+    }
+    * { box-sizing: border-box; }
     body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
       margin: 0;
-      padding: 0;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      color: #1f2937;
     }
-
     .container {
-      width: 90%;
-      max-width: 700px;
-      margin: 50px auto;
-      background: #fff;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      padding: 30px;
-      animation: fadeIn 0.8s ease-in-out;
+      width: min(92vw, 760px);
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+      padding: 28px;
+      animation: fadeIn 0.6s ease;
     }
-
-    h1 {
-      text-align: center;
-      color: #007bff;
-      margin-bottom: 20px;
-      font-size: 1.8rem;
+    h1 { 
+      margin: 0 0 4px; 
+      text-align: center; 
+      color: var(--primary); 
+      font-size: clamp(1.4rem, 2.4vw, 2rem);
     }
+    .sub { text-align: center; margin: 0 0 18px; color: #475569; font-size: 0.95rem; }
 
-    .currency-select {
+    .toolbar {
       display: flex;
-      justify-content: flex-end;
-      margin-bottom: 10px;
-    }
-
-    .currency-select select {
-      padding: 5px 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    input {
-      padding: 10px;
-      width: 100%;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      outline: none;
-      transition: 0.2s;
-      font-size: 1rem;
-    }
-
-    input:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 5px #007bff33;
-    }
-
-    .person-input {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+      gap: 12px;
+      justify-content: space-between;
       align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
-
-    .person-input button {
-      background: #ff4b5c;
-      border: none;
-      color: white;
-      padding: 8px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
+    .toolbar .currency {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #f8fafc; padding: 8px 12px; border-radius: 10px; border: 1px solid #e5e7eb;
     }
-
-    .person-input button:hover {
-      background: #e84150;
-    }
-
-    button {
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      width: 100%;
-      font-size: 1rem;
-      color: white;
-      background: #007bff;
-      cursor: pointer;
-      transition: 0.3s;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background: #0056b3;
-      transform: scale(1.02);
-    }
-
-    .result {
-      margin-top: 20px;
-      background: #f9fafc;
+    select, input[type="number"], input[type="text"] {
+      padding: 10px 12px;
       border-radius: 10px;
-      padding: 15px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: box-shadow .15s, border-color .15s;
+      width: 100%;
     }
+    select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px #007bff22; }
 
-    #chartContainer {
-      margin-top: 20px;
-      text-align: center;
+    .people {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
     }
-
-    .reset-btn {
-      background: #6c757d;
-      margin-top: 10px;
+    .person-input {
+      display: grid; grid-template-columns: 1fr 160px 44px; gap: 10px; align-items: center;
+      background: #f9fafb; padding: 10px; border-radius: 12px; border: 1px solid #eef2f7;
     }
+    .remove-btn {
+      width: 44px; height: 42px; border-radius: 10px; border: none; cursor: pointer; color: #fff;
+      background: var(--danger); font-size: 18px; line-height: 1; display: grid; place-items: center;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .remove-btn:hover { filter: brightness(.95); transform: scale(1.03); }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .actions { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 12px; }
+    .btn {
+      border: none; padding: 12px; border-radius: 12px; cursor: pointer; color: #fff; font-weight: 600; 
+      transition: transform .12s ease, filter .12s ease; user-select: none;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(.97); }
+    .btn-primary { background: var(--primary); }
+    .btn-secondary { background: var(--muted); }
+    .btn-outline { background: #111827; }
+
+    .result { margin-top: 16px; background: #f8fafc; border: 1px solid #e5e7eb; padding: 14px; border-radius: 12px; }
+    .result p { margin: 6px 0; }
+    .result hr { border: none; height: 1px; background: #e5e7eb; margin: 10px 0; }
+
+    #chartContainer { margin-top: 16px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
+    @media (max-width: 540px) {
+      .person-input { grid-template-columns: 1fr 120px 44px; }
+      .actions { grid-template-columns: 1fr; }
     }
   </style>
-</head>
-<body>
-  <div class="container">
-    <h1>💰 Smart Expense Splitter</h1>
-
-    <div class="currency-select">
-      <label for="currency">Currency:</label>&nbsp;
-      <select id="currency">
-        <option value="₹">₹ (INR)</option>
-        <option value="$">$ (USD)</option>
-        <option value="€">€ (EUR)</option>
-      </select>
-    </div>
-
-    <div id="peopleList"></div>
-
-    <button onclick="addPerson()">➕ Add Person</button>
-    <button onclick="calculate()">🧮 Calculate Split</button>
-    <button class="reset-btn" onclick="resetAll()">♻ Reset</button>
-
-    <div id="result" class="result"></div>
-    <div id="chartContainer">
-      <canvas id="expenseChart" width="400" height="200"></canvas>
-    </div>
-
-    <button onclick="downloadReport()">📄 Download Report</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script defer>
     let people = [];
     let chart;
 
     function addPerson(name = '', amount = '') {
-      const container = document.getElementById('peopleList');
-      const div = document.createElement('div');
-      div.classList.add('person-input');
-      div.innerHTML = `
-        <input type="text" placeholder="Name" class="name" value="${name}">
-        <input type="number" placeholder="Amount Paid" class="amount" min="0" value="${amount}">
-        <button onclick="removePerson(this)">✖</button>
+      const row = document.createElement('div');
+      row.className = 'person-input';
+      row.innerHTML = `
+        <input type="text" placeholder="Name" class="name" value="${name}" aria-label="Name">
+        <input type="number" step="0.01" min="0" placeholder="Amount Paid" class="amount" value="${amount}" aria-label="Amount paid">
+        <button type="button" class="remove-btn" title="Remove">✖</button>
       `;
-      container.appendChild(div);
-
-      div.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', calculate);
-      });
+      document.getElementById('peopleList').appendChild(row);
     }
 
-    function removePerson(btn) {
-      btn.parentElement.remove();
-      calculate();
+    function snapshotPeople() {
+      const names = Array.from(document.querySelectorAll('.name'));
+      const amounts = Array.from(document.querySelectorAll('.amount'));
+      people = [];
+      for (let i = 0; i < names.length; i++) {
+        const name = names[i].value.trim();
+        const amount = parseFloat(amounts[i].value);
+        if (name && !isNaN(amount)) people.push({ name, amount });
+      }
+      return people;
     }
 
     function calculate() {
-      const names = document.querySelectorAll('.name');
-      const amounts = document.querySelectorAll('.amount');
       const currency = document.getElementById('currency').value;
-      people = [];
-
-      for (let i = 0; i < names.length; i++) {
-        const name = names[i].value.trim();
-        const amount = parseFloat(amounts[i].value) || 0;
-        if (name) {
-          people.push({ name, amount });
-        }
-      }
-
       const resultDiv = document.getElementById('result');
-      if (people.length === 0) {
-        resultDiv.innerHTML = "<p>Please add at least one person!</p>";
+      const data = snapshotPeople();
+
+      if (data.length === 0) {
+        resultDiv.innerHTML = '<p>Please add at least one person!</p>';
+        destroyChart();
         return;
       }
 
-      const total = people.reduce((sum, p) => sum + p.amount, 0);
-      const share = total / people.length;
+      const total = data.reduce((s, p) => s + p.amount, 0);
+      const share = total / data.length;
 
-      let resultHTML = <p><b>Total Expense:</b> ${currency}${total.toFixed(2)}</p>;
-      resultHTML += <p><b>Each person should pay:</b> ${currency}${share.toFixed(2)}</p><hr>;
-
-      people.forEach(p => {
+      let html = `<p><b>Total Expense:</b> ${currency}${total.toFixed(2)}</p>`;
+      html += `<p><b>Each person should pay:</b> ${currency}${share.toFixed(2)}</p><hr>`;
+      for (const p of data) {
         const diff = p.amount - share;
-        if (diff > 0) {
-          resultHTML += <p>✅ ${p.name} should receive <b>${currency}${diff.toFixed(2)}</b></p>;
-        } else if (diff < 0) {
-          resultHTML += <p>❌ ${p.name} should pay <b>${currency}${Math.abs(diff).toFixed(2)}</b></p>;
-        } else {
-          resultHTML += <p>👌 ${p.name} is settled up</p>;
-        }
-      });
-
-      resultDiv.innerHTML = resultHTML;
-      drawChart();
+        if (diff > 0) html += `<p>✅ <b>${p.name}</b> should receive <b>${currency}${diff.toFixed(2)}</b></p>`;
+        else if (diff < 0) html += `<p>❌ <b>${p.name}</b> should pay <b>${currency}${Math.abs(diff).toFixed(2)}</b></p>`;
+        else html += `<p>👌 <b>${p.name}</b> is settled up</p>`;
+      }
+      resultDiv.innerHTML = html;
+      drawChart(data);
     }
 
-    function drawChart() {
+    function destroyChart() { if (chart) { chart.destroy(); chart = undefined; } }
+
+    function drawChart(data) {
+      const labels = data.map(p => p.name);
+      const amounts = data.map(p => p.amount);
       const ctx = document.getElementById('expenseChart');
-      const labels = people.map(p => p.name);
-      const data = people.map(p => p.amount);
-
-      if (chart) chart.destroy();
-
+      destroyChart();
+      if (!amounts.length) return;
       chart = new Chart(ctx, {
         type: 'pie',
-        data: {
-          labels,
-          datasets: [{
-            data,
-            borderWidth: 1
-          }]
-        },
-        options: {
-          plugins: {
-            legend: { position: 'bottom' }
-          }
-        }
+        data: { labels, datasets: [{ data: amounts, borderWidth: 1 }] },
+        options: { plugins: { legend: { position: 'bottom' } } }
       });
     }
 
     function resetAll() {
       document.getElementById('peopleList').innerHTML = '';
       document.getElementById('result').innerHTML = '';
-      if (chart) chart.destroy();
+      destroyChart();
       people = [];
+      addPerson();
     }
 
     function downloadReport() {
-      if (people.length === 0) {
-        alert('No data to download!');
-        return;
-      }
       const currency = document.getElementById('currency').value;
-      const total = people.reduce((sum, p) => sum + p.amount, 0);
-      const share = total / people.length;
-      let text = Expense Report\n\nTotal Expense: ${currency}${total.toFixed(2)}\nEach Person Should Pay: ${currency}${share.toFixed(2)}\n\nDetails:\n;
-      people.forEach(p => {
+      const data = snapshotPeople();
+      if (!data.length) { alert('No data to download!'); return; }
+      const total = data.reduce((s, p) => s + p.amount, 0);
+      const share = total / data.length;
+      let text = `Expense Report\n\nTotal Expense: ${currency}${total.toFixed(2)}\nEach Person Should Pay: ${currency}${share.toFixed(2)}\n\nDetails:\n`;
+      for (const p of data) {
         const diff = p.amount - share;
-        if (diff > 0) text += ${p.name} should receive ${currency}${diff.toFixed(2)}\n;
-        else if (diff < 0) text += ${p.name} should pay ${currency}${Math.abs(diff).toFixed(2)}\n;
-        else text += ${p.name} is settled up\n;
-      });
+        if (diff > 0) text += `${p.name} should receive ${currency}${diff.toFixed(2)}\n`;
+        else if (diff < 0) text += `${p.name} should pay ${currency}${Math.abs(diff).toFixed(2)}\n`;
+        else text += `${p.name} is settled up\n`;
+      }
       const blob = new Blob([text], { type: 'text/plain' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'Expense_Report.txt';
       a.click();
+      URL.revokeObjectURL(a.href);
     }
 
-    // Add one default person on load
-    window.onload = () => addPerson();
+    document.addEventListener('DOMContentLoaded', () => {
+      // Buttons (no inline handlers — CSP safe)
+      document.getElementById('addBtn').addEventListener('click', () => addPerson());
+      document.getElementById('calcBtn').addEventListener('click', calculate);
+      document.getElementById('resetBtn').addEventListener('click', resetAll);
+      document.getElementById('downloadBtn').addEventListener('click', downloadReport);
+      document.getElementById('currency').addEventListener('change', calculate);
+
+      // Event delegation for dynamic rows
+      const list = document.getElementById('peopleList');
+      list.addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-btn');
+        if (btn) { btn.parentElement.remove(); calculate(); }
+      });
+      list.addEventListener('input', (e) => {
+        if (e.target.classList.contains('name') || e.target.classList.contains('amount')) {
+          calculate();
+        }
+      });
+
+      // Start with one empty row
+      addPerson();
+    });
   </script>
+</head>
+<body>
+  <div class="container" role="application">
+    <h1>💰 Smart Expense Splitter</h1>
+    <p class="sub">Add people, enter what they paid, and get an instant fair split.</p>
+
+    <div class="toolbar">
+      <div class="currency">
+        <label for="currency">Currency</label>
+        <select id="currency" aria-label="Currency selector">
+          <option value="₹">₹ (INR)</option>
+          <option value="$">$ (USD)</option>
+          <option value="€">€ (EUR)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="peopleList" class="people" aria-live="polite"></div>
+
+    <div class="actions">
+      <button id="addBtn" type="button" class="btn btn-secondary">➕ Add Person</button>
+      <button id="calcBtn" type="button" class="btn btn-primary">🧮 Calculate Split</button>
+      <button id="resetBtn" type="button" class="btn btn-outline">♻️ Reset</button>
+    </div>
+
+    <div id="result" class="result" aria-live="polite"></div>
+    <div id="chartContainer">
+      <canvas id="expenseChart" width="400" height="220" aria-label="Expense distribution chart"></canvas>
+    </div>
+
+    <div class="actions" style="grid-template-columns: 1fr; margin-top: 12px;">
+      <button id="downloadBtn" type="button" class="btn btn-primary">📄 Download Report</button>
+    </div>
+  </div>
 </body>
 </html>
